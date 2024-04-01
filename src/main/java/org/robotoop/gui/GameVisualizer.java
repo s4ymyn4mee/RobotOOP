@@ -11,7 +11,7 @@ import java.awt.geom.AffineTransform;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import javax.swing.*;
+import javax.swing.JPanel;
 
 public class GameVisualizer extends JPanel {
     private final Timer m_timer = initTimer();
@@ -21,20 +21,18 @@ public class GameVisualizer extends JPanel {
         return timer;
     }
 
-    private volatile int m_rectangleX = 0;
-    private volatile int m_rectangleY = 0;
-    private volatile int m_rectangleWidth = 10;
-    private volatile int m_rectangleHeight = 10;
-
     private volatile double m_robotPositionX = 100;
     private volatile double m_robotPositionY = 100;
     private volatile double m_robotDirection = 0;
-
+    private double goalX; // Цель по оси X
+    private double goalY; // Цель по оси Y
+    private double windowWidth = 1900; // Ширина окна
+    private double windowHeight = 1000; // Высота окна
     private volatile int m_targetPositionX = 150;
     private volatile int m_targetPositionY = 100;
 
-    private static final double maxVelocity = 1;
-    private static final double maxAngularVelocity = 0.001;
+    public static double maxVelocity = 0.1;
+    public static double maxAngularVelocity = 0.001;
 
     public GameVisualizer() {
         m_timer.schedule(new TimerTask() {
@@ -57,27 +55,6 @@ public class GameVisualizer extends JPanel {
             }
         });
         setDoubleBuffered(true);
-        addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getButton() == MouseEvent.BUTTON3) { // Правая кнопка мыши
-                    setRectanglePosition(e.getPoint());
-                    repaint();
-                }
-            }
-        });
-
-        addMouseMotionListener(new MouseAdapter() {
-            @Override
-            public void mouseDragged(MouseEvent e) {
-                if (SwingUtilities.isRightMouseButton(e)) {
-                    int width = e.getX() - m_rectangleX;
-                    int height = e.getY() - m_rectangleY;
-                    setRectangleSize(width, height);
-                    repaint();
-                }
-            }
-        });
     }
 
     protected void setTargetPosition(Point p) {
@@ -106,32 +83,106 @@ public class GameVisualizer extends JPanel {
         double distance = distance(m_targetPositionX, m_targetPositionY,
                 m_robotPositionX, m_robotPositionY);
         if (distance < 0.5) {
+            maxVelocity = 0.1;
+            maxAngularVelocity = 0.001;
             return;
         }
-        double velocity = maxVelocity;
         double angleToTarget = angleTo(m_robotPositionX, m_robotPositionY, m_targetPositionX, m_targetPositionY);
-        m_robotDirection = angleToTarget;
+        double angularVelocity = 0;
+        if (angleToTarget > m_robotDirection) {
+            angularVelocity = maxAngularVelocity;
+        } else if (angleToTarget < m_robotDirection) {
+            angularVelocity = -maxAngularVelocity;
+        }
 
-        moveRobot(velocity, 10);
+        moveRobot(maxVelocity, angularVelocity, 10);
     }
+
 
     private static double applyLimits(double value, double min, double max) {
         if (value < min)
             return min;
-        else if (value > max)
+        if (value > max)
             return max;
         return value;
     }
 
-    private void moveRobot(double velocity, double duration) {
-        velocity = applyLimits(velocity, 0, maxVelocity);
+    private void moveRobot(double velocity, double angularVelocity, double duration) {
+        // Перед применением любых изменений проверяем, не выходят ли новые X и Y за границы окна.
+        double tentativeNewX = m_robotPositionX + velocity / angularVelocity *
+                (Math.sin(m_robotDirection + angularVelocity * duration) -
+                        Math.sin(m_robotDirection));
+        if (!Double.isFinite(tentativeNewX)) {
+            tentativeNewX = m_robotPositionX + velocity * duration * Math.cos(m_robotDirection);
+        }
+        double tentativeNewY = m_robotPositionY - velocity / angularVelocity *
+                (Math.cos(m_robotDirection + angularVelocity * duration) -
+                        Math.cos(m_robotDirection));
+        if (!Double.isFinite(tentativeNewY)) {
+            tentativeNewY = m_robotPositionY + velocity * duration * Math.sin(m_robotDirection);
+        }
 
-        double newX = m_robotPositionX + velocity * Math.cos(m_robotDirection);
-        double newY = m_robotPositionY + velocity * Math.sin(m_robotDirection);
+        // Границы окна
+        double margin = 3.0; // Задаём отступ от края окна, чтобы робот не касался границ
+        double lowerBoundX = margin;
+        double upperBoundX = windowWidth - margin;
+        double lowerBoundY = margin;
+        double upperBoundY = windowHeight - margin;
 
-        m_robotPositionX = newX;
-        m_robotPositionY = newY;
+        // Проверяем, не выходят ли предполагаемые новые координаты за границы окна
+        if (tentativeNewX >= lowerBoundX && tentativeNewX <= upperBoundX &&
+                tentativeNewY >= lowerBoundY && tentativeNewY <= upperBoundY) {
+            // Если новые координаты находятся в пределах окна, обновляем позицию робота
+            m_robotPositionX = tentativeNewX;
+            m_robotPositionY = tentativeNewY;
+        } else {
+
+        }
+
+        double newDirection = asNormalizedRadians(m_robotDirection + angularVelocity * duration);
+        m_robotDirection = newDirection;
     }
+
+//    private void moveRobotToGoal(double duration) {
+//        // Рассчитываем вектор до цели
+//        double toGoalX = goalX - m_robotPositionX;
+//        double toGoalY = goalY - m_robotPositionY;
+//
+//        // Рассчитываем угол до цели
+//        double angleToGoal = Math.atan2(toGoalY, toGoalX);
+//
+//        // Нормализуем угол
+//        double normalAngle = asNormalizedRadians(angleToGoal - m_robotDirection);
+//
+//        // Вычисляем угловую скорость для минимального поворота робота к цели
+//        double angularVelocity = normalAngle > Math.PI ? -maxAngularVelocity : maxAngularVelocity;
+//        if (Math.abs(normalAngle) < Math.toRadians(10)) { // Если робот почти повернут к цели
+//            angularVelocity = 0; // Остановим поворот
+//        }
+//
+//        // Рассчитываем новые координаты
+//        double newX, newY;
+//        if (angularVelocity == 0) {
+//            // Если робот направлен к цели, идем прямо
+//            newX = m_robotPositionX + maxVelocity * duration * Math.cos(angleToGoal);
+//            newY = m_robotPositionY + maxVelocity * duration * Math.sin(angleToGoal);
+//        } else {
+//            newX = m_robotPositionX + maxVelocity / angularVelocity * (Math.sin(m_robotDirection + angularVelocity * duration) - Math.sin(m_robotDirection));
+//            newY = m_robotPositionY - maxVelocity / angularVelocity * (Math.cos(m_robotDirection + angularVelocity * duration) - Math.cos(m_robotDirection));
+//        }
+//
+//        // Проверяем не выходим ли за границы окна
+//        if (newX < 0 || newX > windowWidth || newY < 0 || newY > windowHeight) {
+//            maxVelocity = 0;
+//            maxAngularVelocity = 0; // Остановим робота, если он достигает границы
+//        } else {
+//            // Обновляем позицию робота
+//            m_robotPositionX = newX;
+//            m_robotPositionY = newY;
+//            m_robotDirection = asNormalizedRadians(m_robotDirection + angularVelocity * duration);
+//        }
+//    }
+
 
     private static double asNormalizedRadians(double angle) {
         while (angle < 0) {
@@ -153,12 +204,6 @@ public class GameVisualizer extends JPanel {
         Graphics2D g2d = (Graphics2D) g;
         drawRobot(g2d, round(m_robotPositionX), round(m_robotPositionY), m_robotDirection);
         drawTarget(g2d, m_targetPositionX, m_targetPositionY);
-        drawRectangle(g2d, m_rectangleX, m_rectangleY, m_rectangleWidth, m_rectangleHeight);
-    }
-
-    private void drawRectangle(Graphics2D g, int x, int y, int width, int height) {
-        g.setColor(new Color(0, 100, 0));
-        g.drawRect(x, y, width, height);
     }
 
     private static void fillOval(Graphics g, int centerX, int centerY, int diam1, int diam2) {
@@ -191,15 +236,5 @@ public class GameVisualizer extends JPanel {
         fillOval(g, x, y, 5, 5);
         g.setColor(Color.BLACK);
         drawOval(g, x, y, 5, 5);
-    }
-
-    protected void setRectanglePosition(Point p) {
-        m_rectangleX = p.x;
-        m_rectangleY = p.y;
-    }
-
-    protected void setRectangleSize(int width, int height) {
-        m_rectangleWidth = width;
-        m_rectangleHeight = height;
     }
 }
