@@ -11,7 +11,7 @@ import java.awt.geom.AffineTransform;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import javax.swing.JPanel;
+import javax.swing.*;
 
 public class GameVisualizer extends JPanel {
     private final Timer m_timer = initTimer();
@@ -21,6 +21,11 @@ public class GameVisualizer extends JPanel {
         return timer;
     }
 
+    private volatile int m_rectangleX = 0;
+    private volatile int m_rectangleY = 0;
+    private volatile int m_rectangleWidth = 10;
+    private volatile int m_rectangleHeight = 10;
+
     private volatile double m_robotPositionX = 100;
     private volatile double m_robotPositionY = 100;
     private volatile double m_robotDirection = 0;
@@ -28,7 +33,7 @@ public class GameVisualizer extends JPanel {
     private volatile int m_targetPositionX = 150;
     private volatile int m_targetPositionY = 100;
 
-    private static final double maxVelocity = 0.1;
+    private static final double maxVelocity = 1;
     private static final double maxAngularVelocity = 0.001;
 
     public GameVisualizer() {
@@ -52,6 +57,27 @@ public class GameVisualizer extends JPanel {
             }
         });
         setDoubleBuffered(true);
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getButton() == MouseEvent.BUTTON3) { // Правая кнопка мыши
+                    setRectanglePosition(e.getPoint());
+                    repaint();
+                }
+            }
+        });
+
+        addMouseMotionListener(new MouseAdapter() {
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    int width = e.getX() - m_rectangleX;
+                    int height = e.getY() - m_rectangleY;
+                    setRectangleSize(width, height);
+                    repaint();
+                }
+            }
+        });
     }
 
     protected void setTargetPosition(Point p) {
@@ -84,44 +110,27 @@ public class GameVisualizer extends JPanel {
         }
         double velocity = maxVelocity;
         double angleToTarget = angleTo(m_robotPositionX, m_robotPositionY, m_targetPositionX, m_targetPositionY);
-        double angularVelocity = 0;
-        if (angleToTarget > m_robotDirection) {
-            angularVelocity = maxAngularVelocity;
-        }
-        if (angleToTarget < m_robotDirection) {
-            angularVelocity = -maxAngularVelocity;
-        }
+        m_robotDirection = angleToTarget;
 
-        moveRobot(velocity, angularVelocity, 10);
+        moveRobot(velocity, 10);
     }
 
     private static double applyLimits(double value, double min, double max) {
         if (value < min)
             return min;
-        if (value > max)
+        else if (value > max)
             return max;
         return value;
     }
 
-    private void moveRobot(double velocity, double angularVelocity, double duration) {
+    private void moveRobot(double velocity, double duration) {
         velocity = applyLimits(velocity, 0, maxVelocity);
-        angularVelocity = applyLimits(angularVelocity, -maxAngularVelocity, maxAngularVelocity);
-        double newX = m_robotPositionX + velocity / angularVelocity *
-                (Math.sin(m_robotDirection + angularVelocity * duration) -
-                        Math.sin(m_robotDirection));
-        if (!Double.isFinite(newX)) {
-            newX = m_robotPositionX + velocity * duration * Math.cos(m_robotDirection);
-        }
-        double newY = m_robotPositionY - velocity / angularVelocity *
-                (Math.cos(m_robotDirection + angularVelocity * duration) -
-                        Math.cos(m_robotDirection));
-        if (!Double.isFinite(newY)) {
-            newY = m_robotPositionY + velocity * duration * Math.sin(m_robotDirection);
-        }
+
+        double newX = m_robotPositionX + velocity * Math.cos(m_robotDirection);
+        double newY = m_robotPositionY + velocity * Math.sin(m_robotDirection);
+
         m_robotPositionX = newX;
         m_robotPositionY = newY;
-        double newDirection = asNormalizedRadians(m_robotDirection + angularVelocity * duration);
-        m_robotDirection = newDirection;
     }
 
     private static double asNormalizedRadians(double angle) {
@@ -144,6 +153,12 @@ public class GameVisualizer extends JPanel {
         Graphics2D g2d = (Graphics2D) g;
         drawRobot(g2d, round(m_robotPositionX), round(m_robotPositionY), m_robotDirection);
         drawTarget(g2d, m_targetPositionX, m_targetPositionY);
+        drawRectangle(g2d, m_rectangleX, m_rectangleY, m_rectangleWidth, m_rectangleHeight);
+    }
+
+    private void drawRectangle(Graphics2D g, int x, int y, int width, int height) {
+        g.setColor(new Color(0, 100, 0));
+        g.drawRect(x, y, width, height);
     }
 
     private static void fillOval(Graphics g, int centerX, int centerY, int diam1, int diam2) {
@@ -176,5 +191,15 @@ public class GameVisualizer extends JPanel {
         fillOval(g, x, y, 5, 5);
         g.setColor(Color.BLACK);
         drawOval(g, x, y, 5, 5);
+    }
+
+    protected void setRectanglePosition(Point p) {
+        m_rectangleX = p.x;
+        m_rectangleY = p.y;
+    }
+
+    protected void setRectangleSize(int width, int height) {
+        m_rectangleWidth = width;
+        m_rectangleHeight = height;
     }
 }
