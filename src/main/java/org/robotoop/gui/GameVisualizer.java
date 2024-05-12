@@ -87,11 +87,11 @@ public class GameVisualizer extends JPanel {
                 int robotY = MouseInfo.getPointerInfo().getLocation().y;
                 int keyCode = e.getKeyCode();
 
-                if (keyCode == KeyEvent.VK_R) {
+                if (keyCode == KeyEvent.VK_R && Robot.robots.size() < Robot.MAX_AMOUNT) {
                     Robot robot = new Robot(robotX,
                             robotY - 68);
-                    repaint();
                 }
+                repaint();
             }
         });
         setDoubleBuffered(true);
