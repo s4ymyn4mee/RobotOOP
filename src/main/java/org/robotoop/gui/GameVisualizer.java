@@ -81,17 +81,26 @@ public class GameVisualizer extends JPanel {
         addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
-                Point p = MouseInfo.getPointerInfo().getLocation();
-                SwingUtilities.convertPointToScreen(p, GameVisualizer.this);
-                int robotX = MouseInfo.getPointerInfo().getLocation().x;
-                int robotY = MouseInfo.getPointerInfo().getLocation().y;
                 int keyCode = e.getKeyCode();
 
-                if (keyCode == KeyEvent.VK_R && Robot.robots.size() < Robot.MAX_AMOUNT) {
-                    Robot robot = new Robot(robotX,
-                            robotY - 68);
+                switch (keyCode) {
+                    case (KeyEvent.VK_R):
+                        if (Robot.robots.size() < Robot.MAX_AMOUNT) {
+                            Point p = MouseInfo.getPointerInfo().getLocation();
+                            SwingUtilities.convertPointToScreen(p, GameVisualizer.this);
+
+                            int newRobotX = MouseInfo.getPointerInfo().getLocation().x;
+                            int newRobotY = MouseInfo.getPointerInfo().getLocation().y;
+
+                            new Robot(newRobotX, newRobotY - 69);
+                            repaint();
+                        }
+                        break;
+                    case (KeyEvent.VK_E):
+                        Robot.selectNextRobot();
+                        repaint();
+                        break;
                 }
-                repaint();
             }
         });
         setDoubleBuffered(true);
@@ -114,12 +123,17 @@ public class GameVisualizer extends JPanel {
                 continue;
             }
 
-            double angleToTarget = Robot.angleTo(robot.getPositionX(),
-                    robot.getPositionY(),
-                    Target.positionX,
-                    Target.positionY);
-            robot.setDirection(angleToTarget);
+            if (!robot.isTooCloseToRectangle()) {
+                double angleToTarget = Robot.angleTo(robot.getPositionX(),
+                        robot.getPositionY(),
+                        Target.positionX,
+                        Target.positionY);
+                robot.setDirection(angleToTarget);
+            } else {
+                robot.setDirection(robot.getDirection() + Math.PI / 16);
+            }
             robot.moveRobot(Robot.MAX_VELOCITY);
+
         }
     }
 

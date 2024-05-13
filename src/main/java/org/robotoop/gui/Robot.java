@@ -8,20 +8,24 @@ public class Robot {
     private volatile double positionX;
     private volatile double positionY;
     private volatile double direction = 0;
-    public static final double MAX_VELOCITY = 1;
-    //  public static final double maxAngularVelocity = 0.001;
-    public static final ArrayList<Robot> robots = new ArrayList<>();
-    public static final int MAX_AMOUNT = 5;
+    private final int index; //final мб
+    protected static final double MAX_VELOCITY = 1;
+    protected static final ArrayList<Robot> robots = new ArrayList<>();
+    protected static final int MAX_AMOUNT = 500;
+    private static int selectedRobotIndex = -1;
+    public static final int MARGIN = 10;
 
     public Robot() {
         this.positionX = 100;
         this.positionY = 100;
+        this.index = robots.size();
         robots.add(this);
     }
 
     public Robot(double positionX, double positionY) {
         this.positionX = positionX;
         this.positionY = positionY;
+        this.index = robots.size();
         robots.add(this);
     }
 
@@ -29,7 +33,12 @@ public class Robot {
         this.positionX = positionX;
         this.positionY = positionY;
         this.direction = direction;
+        this.index = robots.size();
         robots.add(this);
+    }
+
+    public static void selectNextRobot() {
+        selectedRobotIndex = (selectedRobotIndex + 1) % robots.size();
     }
 
     public double getPositionX() {
@@ -42,6 +51,10 @@ public class Robot {
 
     public double getDirection() {
         return direction;
+    }
+
+    public int getIndex() {
+        return index;
     }
 
     public void setDirection(double direction) {
@@ -58,11 +71,11 @@ public class Robot {
     public void moveRobot(double velocity) {
         velocity = applyLimits(velocity, 0, MAX_VELOCITY);
 
-        double newX = positionX + velocity * Math.cos(direction);
-        double newY = positionY + velocity * Math.sin(direction);
+        double nextX = positionX + velocity * Math.cos(direction);
+        double nextY = positionY + velocity * Math.sin(direction);
 
-        positionX = newX;
-        positionY = newY;
+        positionX = nextX;
+        positionY = nextY;
     }
 
     private static double applyLimits(double value, double min, double max) {
@@ -90,6 +103,19 @@ public class Robot {
         return angle;
     }
 
+    public boolean isTooCloseToRectangle() {
+        Rectangle robotBounds = new Rectangle(GameVisualizer.round(positionX) - MARGIN,
+                GameVisualizer.round(positionY) - MARGIN,
+                2 * MARGIN,
+                2 * MARGIN);
+        for (Rectangle rect : CustomRectangle.rectangles) {
+            if (rect.intersects(robotBounds)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void drawRobot(Graphics2D g2d) {
         int robotCenterX = GameVisualizer.round(positionX);
         int robotCenterY = GameVisualizer.round(positionY);
@@ -100,7 +126,11 @@ public class Robot {
                 robotCenterY);
         g2d.setTransform(t);
 
-        g2d.setColor(Color.RED);
+        if (index != selectedRobotIndex) {
+            g2d.setColor(Color.RED);
+        } else {
+            g2d.setColor(Color.BLUE);
+        }
         GameVisualizer.fillOval(g2d, robotCenterX, robotCenterY, 30, 10);
 
         g2d.setColor(Color.BLACK);
