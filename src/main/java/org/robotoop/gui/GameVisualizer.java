@@ -60,7 +60,7 @@ public class GameVisualizer extends JPanel {
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                if (SwingUtilities.isRightMouseButton(e)) { // Правая кнопка мыши
+                if (SwingUtilities.isRightMouseButton(e)) {
                     CustomRectangle.addRectangle();
                     repaint();
                 }
@@ -87,12 +87,12 @@ public class GameVisualizer extends JPanel {
                     case (KeyEvent.VK_R):
                         if (Robot.robots.size() < Robot.MAX_AMOUNT) {
                             Point p = MouseInfo.getPointerInfo().getLocation();
-                            SwingUtilities.convertPointToScreen(p, GameVisualizer.this);
+                            SwingUtilities.convertPointFromScreen(p, GameVisualizer.this);
 
-                            int newRobotX = MouseInfo.getPointerInfo().getLocation().x;
-                            int newRobotY = MouseInfo.getPointerInfo().getLocation().y;
+                            int newRobotX = p.x;
+                            int newRobotY = p.y;
 
-                            new Robot(newRobotX, newRobotY - 69);
+                            new Robot(newRobotX, newRobotY);
                             repaint();
                         }
                         break;

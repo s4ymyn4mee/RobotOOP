@@ -1,5 +1,7 @@
 package org.robotoop.gui;
 
+import org.robotoop.log.Logger;
+
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 
@@ -19,6 +21,7 @@ public class Target {
     protected static void setTargetPosition(Point p) {
         positionX = p.x;
         positionY = p.y;
+        Logger.debug("Таргет переставлен: x=" + positionX + ", y=" + positionY);
     }
 
     protected static void drawTarget(Graphics2D g2d) {

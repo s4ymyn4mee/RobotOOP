@@ -1,5 +1,7 @@
 package org.robotoop.gui;
 
+import org.robotoop.log.Logger;
+
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
@@ -8,25 +10,19 @@ public class Robot {
     private volatile double positionX;
     private volatile double positionY;
     private volatile double direction = 0;
-    private final int index; //final мб
+    private final int index;
     protected static final double MAX_VELOCITY = 1;
     protected static final ArrayList<Robot> robots = new ArrayList<>();
     protected static final int MAX_AMOUNT = 500;
     private static int selectedRobotIndex = -1;
     public static final int MARGIN = 10;
 
-    public Robot() {
-        this.positionX = 100;
-        this.positionY = 100;
-        this.index = robots.size();
-        robots.add(this);
-    }
-
     public Robot(double positionX, double positionY) {
         this.positionX = positionX;
         this.positionY = positionY;
         this.index = robots.size();
         robots.add(this);
+        Logger.debug("Добавлен новый робот: x=" + positionX + ", y=" + positionY);
     }
 
     public Robot(double positionX, double positionY, double direction) {
@@ -35,10 +31,12 @@ public class Robot {
         this.direction = direction;
         this.index = robots.size();
         robots.add(this);
+        Logger.debug("Добавлен новый робот: x=" + positionX + ", y=" + positionY);
     }
 
     public static void selectNextRobot() {
         selectedRobotIndex = (selectedRobotIndex + 1) % robots.size();
+        Logger.debug("Выбран текущий робот с индексом " + selectedRobotIndex);
     }
 
     public double getPositionX() {

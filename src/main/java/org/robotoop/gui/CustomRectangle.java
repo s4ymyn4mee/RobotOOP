@@ -1,5 +1,7 @@
 package org.robotoop.gui;
 
+import org.robotoop.log.Logger;
+
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Graphics2D;
@@ -52,13 +54,21 @@ public class CustomRectangle {
     }
 
     public static void addRectangle() {
-        rectangles.add(new Rectangle(m_rectangleX, m_rectangleY, m_rectangleWidth, m_rectangleHeight));
-        m_rectangleWidth = 0;
-        m_rectangleHeight = 0;
+        if (m_rectangleHeight > 0 && m_rectangleWidth > 0) {
+            rectangles.add(new Rectangle(m_rectangleX, m_rectangleY, m_rectangleWidth, m_rectangleHeight));
+            m_rectangleWidth = 0;
+            m_rectangleHeight = 0;
+            Logger.debug("Добавлен новый прямоугольник: x=" + m_rectangleX + ", y=" + m_rectangleY);
+        }
     }
 
     public static void removeRectangle(Point p) {
-        rectangles.removeIf(rect -> rect.contains(p));
+        for (Rectangle rect : rectangles) {
+            if (rect.contains(p)) {
+                Logger.debug("Удалён прямоугольник: x=" + rect.getX() + ", y=" + rect.getY());
+                rectangles.remove(rect);
+            }
+        }
     }
 
     public static void drawRectangle(Graphics2D g, int x, int y, int width, int height) {
