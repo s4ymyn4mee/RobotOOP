@@ -20,7 +20,7 @@ public class LogWindow extends JInternalFrame implements LogChangeListener {
         m_logSource = logSource;
         m_logSource.registerListener(this);
         m_logContent = new TextArea("");
-        m_logContent.setSize(200, 500);
+        m_logContent.setSize(500, 500);
 
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(m_logContent, BorderLayout.CENTER);
@@ -32,7 +32,7 @@ public class LogWindow extends JInternalFrame implements LogChangeListener {
     private void updateLogContent() {
         StringBuilder content = new StringBuilder();
         for (LogEntry entry : m_logSource.all()) {
-            content.append(entry.getFormattedEntry()).append("\n"); // Используем getFormattedEntry
+            content.append(entry.getFormattedEntry()).append("\n");
         }
         m_logContent.setText(content.toString());
         m_logContent.invalidate();
