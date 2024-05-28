@@ -48,8 +48,8 @@ public class GameVisualizer extends JPanel {
             @Override
             public void mousePressed(MouseEvent e) {
                 if (SwingUtilities.isLeftMouseButton(e)) {
-                    if (!Target.created) {
-                        Target.created = true;
+                    if (!Target.isCreated()) {
+                        Target.setCreated(true);
                     }
                     Target.setTargetPosition(e.getPoint());
                 } else if (SwingUtilities.isRightMouseButton(e)) {
@@ -85,7 +85,7 @@ public class GameVisualizer extends JPanel {
 
                 switch (keyCode) {
                     case (KeyEvent.VK_R):
-                        if (Robot.robots.size() < Robot.MAX_AMOUNT) {
+                        if (Robot.getRobots().size() < Robot.MAX_AMOUNT) {
                             Point p = MouseInfo.getPointerInfo().getLocation();
                             SwingUtilities.convertPointFromScreen(p, GameVisualizer.this);
 
@@ -114,9 +114,9 @@ public class GameVisualizer extends JPanel {
     }
 
     protected void onModelUpdateEvent() {
-        for (Robot robot : Robot.robots) {
-            double distance = Robot.distance(Target.positionX,
-                    Target.positionY,
+        for (Robot robot : Robot.getRobots()) {
+            double distance = Robot.distance(Target.getPositionX(),
+                    Target.getPositionY(),
                     robot.getPositionX(),
                     robot.getPositionY());
             if (distance < 0.5) {
@@ -126,8 +126,8 @@ public class GameVisualizer extends JPanel {
             if (!robot.isTooCloseToRectangle()) {
                 double angleToTarget = Robot.angleTo(robot.getPositionX(),
                         robot.getPositionY(),
-                        Target.positionX,
-                        Target.positionY);
+                        Target.getPositionX(),
+                        Target.getPositionY());
                 robot.setDirection(angleToTarget);
             } else {
                 robot.setDirection(robot.getDirection() + Math.PI / 16);
@@ -146,7 +146,7 @@ public class GameVisualizer extends JPanel {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
         Robot.drawAllRobots(g2d);
-        if (Target.created)
+        if (Target.isCreated())
             Target.drawTarget(g2d);
         CustomRectangle.drawAllRectangles(g2d);
     }

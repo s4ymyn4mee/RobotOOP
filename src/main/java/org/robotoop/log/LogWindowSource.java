@@ -3,9 +3,9 @@ package org.robotoop.log;
 import java.util.*;
 
 public class LogWindowSource {
-    private int m_iQueueLength;
+    private final int m_iQueueLength;
 
-    private Queue<LogEntry> m_messages;
+    private final Queue<LogEntry> m_messages;
     private final ArrayList<LogChangeListener> m_listeners;
 
     public LogWindowSource(int iQueueLength) {

@@ -12,10 +12,10 @@ public class Robot {
     private volatile double direction = 0;
     private final int index;
     protected static final double MAX_VELOCITY = 1;
-    protected static final ArrayList<Robot> robots = new ArrayList<>();
-    protected static final int MAX_AMOUNT = 500;
+    protected static final int MAX_AMOUNT = 10;
+    private static final ArrayList<Robot> robots = new ArrayList<>();
     private static int selectedRobotIndex = -1;
-    public static final int MARGIN = 10;
+    private static final int MARGIN = 10;
 
     public Robot(double positionX, double positionY) {
         this.positionX = positionX;
@@ -25,17 +25,12 @@ public class Robot {
         Logger.debug("Добавлен новый робот: x=" + positionX + ", y=" + positionY);
     }
 
-    public Robot(double positionX, double positionY, double direction) {
-        this.positionX = positionX;
-        this.positionY = positionY;
-        this.direction = direction;
-        this.index = robots.size();
-        robots.add(this);
-        Logger.debug("Добавлен новый робот: x=" + positionX + ", y=" + positionY);
+    public static ArrayList<Robot> getRobots() {
+        return robots;
     }
 
     public static void selectNextRobot() {
-        selectedRobotIndex = (selectedRobotIndex + 1) % robots.size();
+        selectedRobotIndex = (selectedRobotIndex + 1) % getRobots().size();
         Logger.debug("Выбран текущий робот с индексом " + selectedRobotIndex);
     }
 
@@ -106,7 +101,7 @@ public class Robot {
                 GameVisualizer.round(positionY) - MARGIN,
                 2 * MARGIN,
                 2 * MARGIN);
-        for (Rectangle rect : CustomRectangle.rectangles) {
+        for (Rectangle rect : CustomRectangle.getRectangles()) {
             if (rect.intersects(robotBounds)) {
                 return true;
             }
@@ -142,7 +137,7 @@ public class Robot {
     }
 
     public static void drawAllRobots(Graphics2D g2d) {
-        for (Robot robot : robots) {
+        for (Robot robot : Robot.getRobots()) {
             robot.drawRobot(g2d);
         }
     }

@@ -4,9 +4,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class LogEntry {
-    private LogLevel level;
-    private String message;
-    private LocalDateTime timestamp;
+    private final LogLevel level;
+    private final String message;
+    private final LocalDateTime timestamp;
 
     public LogEntry(LogLevel logLevel, String strMessage) {
         this.message = strMessage;

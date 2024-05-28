@@ -9,56 +9,50 @@ import java.awt.Color;
 import java.util.ArrayList;
 
 public class CustomRectangle {
-    private static volatile int m_rectangleX = 0;
-    private static volatile int m_rectangleY = 0;
-    private static volatile int m_rectangleWidth = 0;
-    private static volatile int m_rectangleHeight = 0;
-
-    public static final ArrayList<Rectangle> rectangles = new ArrayList<>();
-
-//    public CustomRectangle(int x, int y, int width, int height) {
-//        this.x = x;
-//        this.y = y;
-//        this.width = width;
-//        this.height = height;
-//    }
-
-//    public Rectangle getRectangle() {
-//        return new Rectangle(x, y, width, height);
-//    }
+    private static volatile int m_currentRectangleX = 0;
+    private static volatile int m_currentRectangleY = 0;
+    private static volatile int m_currentRectangleWidth = 0;
+    private static volatile int m_currentRectangleHeight = 0;
+    private static final ArrayList<Rectangle> rectangles = new ArrayList<>();
 
     public static int getX() {
-        return m_rectangleX;
+        return m_currentRectangleX;
     }
 
     public static int getY() {
-        return m_rectangleY;
+        return m_currentRectangleY;
     }
 
     public static int getWidth() {
-        return m_rectangleWidth;
+        return m_currentRectangleWidth;
     }
 
     public static int getHeight() {
-        return m_rectangleHeight;
+        return m_currentRectangleHeight;
+    }
+
+    public static ArrayList<Rectangle> getRectangles() {
+        return rectangles;
     }
 
     public static void setRectanglePosition(Point p) {
-        m_rectangleX = p.x;
-        m_rectangleY = p.y;
+        m_currentRectangleX = p.x;
+        m_currentRectangleY = p.y;
     }
 
     public static void setRectangleSize(int width, int height) {
-        m_rectangleWidth = width;
-        m_rectangleHeight = height;
+        m_currentRectangleWidth = width;
+        m_currentRectangleHeight = height;
     }
 
     public static void addRectangle() {
-        if (m_rectangleHeight > 0 && m_rectangleWidth > 0) {
-            rectangles.add(new Rectangle(m_rectangleX, m_rectangleY, m_rectangleWidth, m_rectangleHeight));
-            m_rectangleWidth = 0;
-            m_rectangleHeight = 0;
-            Logger.debug("Добавлен новый прямоугольник: x=" + m_rectangleX + ", y=" + m_rectangleY);
+        if (m_currentRectangleHeight > 0 && m_currentRectangleWidth > 0) {
+            rectangles.add(new Rectangle(m_currentRectangleX, m_currentRectangleY,
+                    m_currentRectangleWidth, m_currentRectangleHeight));
+            m_currentRectangleWidth = 0;
+            m_currentRectangleHeight = 0;
+            Logger.debug("Добавлен новый прямоугольник: x=" + m_currentRectangleX + "," +
+                    " y=" + m_currentRectangleY);
         }
     }
 
